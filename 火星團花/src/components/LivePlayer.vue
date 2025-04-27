@@ -156,6 +156,18 @@ const clickMuted = () => {
   console.log("clicked", isMuted)
 }
 
+const fanMessages = [
+  "MAX 真的好帥喔❤️",
+  "有人一起搶演唱會票嗎😭",
+  "笑死這段超好笑哈哈哈",
+  "天啊 MAX 笑起來太犯規了啦😳",
+  "有生之年看到直播了嗚嗚嗚嗚🥹",
+  "MAX 你的新髮型超帥欸🔥",
+  "今天直播穿搭也太讚了吧！！",
+  "感覺MAX今天心情超好欸～好可愛",
+  "Max 笑起來像太陽一樣溫暖 ☀️",
+];
+
 const emojis = [
   { icon: '👍', name: '讚' },
   { icon: '❤️', name: '愛心' },
@@ -220,6 +232,8 @@ const sendMessage = async () => {
   }
 };
 
+
+
 // 讓直播自動播放
 onMounted(() => {
   if (Hls.isSupported()) {
@@ -235,16 +249,28 @@ onMounted(() => {
     videoRef.value.play();
     loading.value = false;
   }
+
+  setInterval(() => {
+    const randomMsg = fanMessages[Math.floor(Math.random() * fanMessages.length)];
+    messages.value.push({ sender: "粉絲", text: randomMsg });
+
+    // 自動捲到最底（可選）
+    const chatContainer = document.querySelector('.flex-1.p-4.overflow-y-auto');
+    if (chatContainer) {
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+  }, 5000); // 每 5 秒自動塞一則粉絲留言
+
   // 每 30 秒插播，但如果使用者剛發過訊息，就跳過
-/*  setInterval(async () => {
+  setInterval(async () => {
     const now = Date.now();
     if (lastUserMessageTime && now - lastUserMessageTime < 60000) {
       console.log("使用者剛說過話，暫不插播");
       return;
     }
     await playIdleMessage();
-  }, 30000);
-*/
+  }, 60000);
+
 });
 
 onBeforeUnmount(() => {
