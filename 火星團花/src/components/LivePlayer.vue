@@ -38,11 +38,11 @@
       <section class="flex-1 flex flex-col px-6 py-8">
         <!-- 上半部：直播畫面 -->
         <div class="flex-1 flex items-center justify-center pb-2">
-          <div
-            class="relative w-full h-full max-w-3xl rounded-2xl aspect-video flex items-center justify-center bg-black">
+          <div class="relative w-auto h-full max-h-[480px] rounded-2xl flex items-center justify-center bg-black">
             <video ref="videoRef" :muted="isMuted" autoplay loop playsinline
-              class="h-full w-full object-cover rounded-2xl" :controls="false" tabindex="-1"></video>
+              class="h-full w-auto object-contain rounded-2xl" :controls="false" tabindex="-1"></video>
           </div>
+
         </div>
         <!-- 下半部：六張正方形照片，固定較大尺寸 -->
         <div class="flex justify-center items-center gap-10 h-32">
