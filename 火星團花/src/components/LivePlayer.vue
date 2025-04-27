@@ -128,11 +128,31 @@ import Hls from "hls.js";
 import axios from "axios";
 
 const videoRef = ref(null);
-const hlsUrl = "http://35.91.162.109:8088/hls/stream.m3u8";
+// const hlsUrl = "http://35.91.162.109:8088/hls/stream.m3u8";
+
+// 定義影片清單
+const videoPlaylist = [
+  "http://example.com/video1.m3u8",
+  "http://example.com/video2.m3u8",
+  "http://example.com/video3.m3u8",
+];
+let currentVideoIndex = ref(0); // 當前播放的影片索引
 
 let hls = null;
 const loading = ref(true);
+const playNextVideo = () => {
+  currentVideoIndex.value = (currentVideoIndex.value + 1) % videoPlaylist.length; // 切換到下一部影片
+  const nextVideoUrl = videoPlaylist[currentVideoIndex.value];
 
+  if (Hls.isSupported()) {
+    hls.loadSource(nextVideoUrl);
+    hls.attachMedia(videoRef.value);
+    videoRef.value.play();
+  } else if (videoRef.value.canPlayType("application/vnd.apple.mpegurl")) {
+    videoRef.value.src = nextVideoUrl;
+    videoRef.value.play();
+  }
+};
 const messageText = ref('');
 const messages = ref([]);
 const playIdleMessage = async () => {
@@ -236,19 +256,24 @@ const sendMessage = async () => {
 
 // 讓直播自動播放
 onMounted(() => {
+  const initialVideoUrl = videoPlaylist[currentVideoIndex.value];
+
   if (Hls.isSupported()) {
     hls = new Hls();
-    hls.loadSource(hlsUrl);
+    hls.loadSource(initialVideoUrl);
     hls.attachMedia(videoRef.value);
     videoRef.value.play();
-    hls.on(Hls.Events.MANIFEST_PARSED, function () {
-      loading.value = false;
-    });
+
+    // 監聽影片播放結束事件，切換到下一部影片
+    videoRef.value.addEventListener("ended", playNextVideo);
   } else if (videoRef.value.canPlayType("application/vnd.apple.mpegurl")) {
-    videoRef.value.src = hlsUrl;
+    videoRef.value.src = initialVideoUrl;
     videoRef.value.play();
-    loading.value = false;
+
+    // 監聽影片播放結束事件，切換到下一部影片
+    videoRef.value.addEventListener("ended", playNextVideo);
   }
+
 
   setInterval(() => {
     const randomMsg = fanMessages[Math.floor(Math.random() * fanMessages.length)];
@@ -261,15 +286,15 @@ onMounted(() => {
     }
   }, 5000); // 每 5 秒自動塞一則粉絲留言
 
-  // 每 30 秒插播，但如果使用者剛發過訊息，就跳過
-  setInterval(async () => {
-    const now = Date.now();
-    if (lastUserMessageTime && now - lastUserMessageTime < 60000) {
-      console.log("使用者剛說過話，暫不插播");
-      return;
-    }
-    await playIdleMessage();
-  }, 60000);
+  // // 每 30 秒插播，但如果使用者剛發過訊息，就跳過
+  // setInterval(async () => {
+  //   const now = Date.now();
+  //   if (lastUserMessageTime && now - lastUserMessageTime < 60000) {
+  //     console.log("使用者剛說過話，暫不插播");
+  //     return;
+  //   }
+  //   await playIdleMessage();
+  // }, 60000);
 
 });
 
@@ -277,6 +302,11 @@ onBeforeUnmount(() => {
   if (hls) {
     hls.destroy();
     hls = null;
+  }
+
+  // 移除事件監聽器
+  if (videoRef.value) {
+    videoRef.value.removeEventListener("ended", playNextVideo);
   }
 });
 </script>
